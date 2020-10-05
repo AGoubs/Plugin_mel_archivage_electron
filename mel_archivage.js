@@ -71,7 +71,6 @@ if (window.rcmail) {
                                 uid.flags.SEEN = false;
                             }
                             files.push({ "url": rcmail.url('mail/viewsource', rcmail.params_from_uid(uid.message_uid)).replace(/_framed=/, '_save='), "token": rcmail.env.request_token, "uid": uid.message_uid, "mbox": rcmail.env.username + "/" + mbox, "etiquettes": uid.flags });
-                            // files.push({ "url": rcmail.secure_url(rcmail.url('mail/viewsource', rcmail.params_from_uid(uid.message_uid)).replace(/_framed=/, '_save=')), "uid": uid.message_uid, "mbox": rcmail.env.username + "/" + mbox, "etiquettes": uid.flags });
                         }
                         window.parent.api.send('download_eml', files);
                         $("#nb_mails").text(rcmail.get_label('mel_archivage.archive_downloading'));
