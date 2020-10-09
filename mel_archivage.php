@@ -100,7 +100,6 @@ class mel_archivage extends rcube_plugin
     $result = array('action' => 'plugin.mel_archivage_traitement_electron', 'data' => $this->traitement_archivage());
     echo json_encode($result);
     exit;
-    // $this->_deliver_listfile($this->traitement_archivage());
   }
   /**
    * Téléchargement des mails
@@ -177,19 +176,6 @@ class mel_archivage extends rcube_plugin
         }
       }
 
-      if (count($messageset) > 0) {
-        return $messageset;
-      } else {
-        if (class_exists('mel_logs')) {
-          mel_logs::get_instance()->log(mel_logs::ERROR, "[mel_archivage] traitement_archivage() Error: Count message = 0");
-        }
-        setcookie("current_archivage", "0");
-        $rcmail->output->set_env('mailbox', rcube_utils::get_input_value('_mbox', rcube_utils::INPUT_GET));
-        $rcmail->output->set_env('account', rcube_utils::get_input_value('_account', rcube_utils::INPUT_GET));
-        $rcmail->output->show_message('mel_archivage.error_no_message', 'error');
-        $rcmail->output->send('mel_archivage.mel_archivage');
-      }
-
       // Créer un folder "Mes messages archivés" si non existant
       if (isset($folder)) {
         $delimiter = $storage->get_hierarchy_delimiter();
@@ -212,7 +198,21 @@ class mel_archivage extends rcube_plugin
             }
           }
         }
-        $storage->move_message($message_uid, $folder);
+        $storage->move_message($messageset[$message->folder], $folder);
+      }
+
+      if (count($messageset) > 0) {
+        setcookie("current_archivage", "1");
+        return $messageset;
+      } else {
+        if (class_exists('mel_logs')) {
+          mel_logs::get_instance()->log(mel_logs::ERROR, "[mel_archivage] traitement_archivage() Error: Count message = 0");
+        }
+        setcookie("current_archivage", "0");
+        $rcmail->output->set_env('mailbox', rcube_utils::get_input_value('_mbox', rcube_utils::INPUT_GET));
+        $rcmail->output->set_env('account', rcube_utils::get_input_value('_account', rcube_utils::INPUT_GET));
+        $rcmail->output->show_message('mel_archivage.error_no_message', 'error');
+        $rcmail->output->send('mel_archivage.mel_archivage');
       }
     } catch (Exception $ex) {
       if (class_exists('mel_logs')) {
@@ -224,6 +224,9 @@ class mel_archivage extends rcube_plugin
       $rcmail->output->show_message('mel_archivage.error_too_many_messages', 'error');
       $rcmail->output->send('mel_archivage.mel_archivage');
     }
+    // Variable pour archivage_avancement
+    setcookie("current_archivage", "1");
+    exit;
   }
 
   // /**
@@ -254,19 +257,6 @@ class mel_archivage extends rcube_plugin
     readfile($tmpfname);
   }
 
-  //  /**
-  //  * Helper method to send the list of mails to the javascript
-  //  */
-  private function _deliver_listfile($uids)
-  {
-    // send json headers
-    header('Content-Type: application/json');
-
-    echo json_encode($uids);
-
-    //Ignore console error in Chrome
-    header('Content-Type: text/html');
-  }
   /**
    * Helper function to convert filenames to the configured charset
    */
